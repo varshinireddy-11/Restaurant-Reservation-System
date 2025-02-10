@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Reservation System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 50px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .form-container input {
+            padding: 10px;
+            width: 30%;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .form-container button {
+            padding: 10px;
+            background-color: #ff7e5f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #feb47b;
+        }
+        .reservation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .reservation-table th, .reservation-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .reservation-table th {
+            background-color: #ff7e5f;
+            color: white;
+        }
+        .delete-btn, .checkout-btn {
+            padding: 5px 10px;
+            margin: 2px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .delete-btn {
+            background-color: red;
+            color: white;
+        }
+        .delete-btn:hover {
+            background-color: darkred;
+        }
+        .checkout-btn {
+            background-color: green;
+            color: white;
+        }
+        .checkout-btn:hover {
+            background-color: darkgreen;
+        }
+        .status-checked-out {
+            color: green;
+        }
+        .status-not-checked-out {
+            color: red;
+        }
+        .seats-left {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Restaurant Reservation System</h1>
+        <div class="form-container">
+            <input type="text" id="customer-name" placeholder="Customer Name" />
+            <input type="text" id="phone-number" placeholder="Phone Number" />
+            <input type="number" id="guest-count" placeholder="Guest Count" />
+            <button onclick="makeReservation()">Reserve</button>
+        </div>
+
+        <div class="seats-left">
+            <h2>Seats Left: <span id="seats-left">50</span></h2>
+        </div>
+
+        <table class="reservation-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Check-in Time</th>
+                    <th>Checkout Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="reservation-list">
+                <!-- Reservation entries will appear here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let seatsLeft = 50; // Total seats
+        const reservationList = [];
+
+        // Function to make a reservation
+        function makeReservation() {
+            const name = document.getElementById("customer-name").value;
+            const phone = document.getElementById("phone-number").value;
+            const guests = parseInt(document.getElementById("guest-count").value);
+
+            if (!name || !phone || !guests) {
+                alert("Please fill all fields");
+                return;
+            }
+
+            if (seatsLeft - guests < 0) {
+                alert("Not enough seats available!");
+                return;
+            }
+
+            // Check if name already exists
+            if (reservationList.some(reservation => reservation.name === name)) {
+                alert("This name is already reserved.");
+                return;
+            }
+
+            // Create a new reservation
+            const reservation = {
+                name,
+                phone,
+                guests,
+                checkInTime: new Date().toLocaleString(),
+                checkedOut: false
+            };
+
+            reservationList.push(reservation);
+            seatsLeft -= guests;
+
+            updateUI();
+        }
+
+        // Function to update the UI
+        function updateUI() {
+            const seatsLeftElement = document.getElementById("seats-left");
+            const reservationListElement = document.getElementById("reservation-list");
+
+            // Update the "Seats Left" display
+            seatsLeftElement.textContent = seatsLeft;
+
+            // Reset the table
+            reservationListElement.innerHTML = "";
+
+            // Populate the table with reservations
+            reservationList.forEach((reservation, index) => {
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${reservation.name}</td>
+                    <td>${reservation.phone}</td>
+                    <td>${reservation.checkInTime}</td>
+                    <td class="${reservation.checkedOut ? 'status-checked-out' : 'status-not-checked-out'}">
+                        ${reservation.checkedOut ? 'Checked Out' : 'Not Checked Out'}
+                    </td>
+                    <td>
+                        ${!reservation.checkedOut ? `<button class="checkout-btn" onclick="checkout(${index})">Click to Checkout</button>` : ""}
+                        <button class="delete-btn" onclick="deleteReservation(${index})">Delete</button>
+                    </td>
+                `;
+                reservationListElement.appendChild(row);
+            });
+        }
+
+        // Function to handle checkout
+        function checkout(index) {
+            const reservation = reservationList[index];
+            if (reservation.checkedOut) {
+                alert("Already checked out");
+                return;
+            }
+
+            reservation.checkedOut = true;
+            seatsLeft += reservation.guests;
+
+            updateUI();
+        }
+
+        // Function to delete a reservation
+        function deleteReservation(index) {
+            const reservation = reservationList[index];
+            if (!reservation.checkedOut) {
+                seatsLeft += reservation.guests;
+            }
+
+            reservationList.splice(index, 1);
+            updateUI();
+        }
+    </script>
+</body>
+</html>
